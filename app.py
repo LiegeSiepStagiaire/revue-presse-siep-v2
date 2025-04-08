@@ -77,8 +77,7 @@ if st.session_state.article_history:
     for i, article in enumerate(st.session_state.article_history):
         if search_filter.lower() in article['title'].lower():
             cols = st.columns([5, 1, 1])
-            cols[0].markdown(f"**{article['title']}**  
-_{article['source']} — {article['date']}_  
+            cols[0].markdown(f"**{{article['title']}}**  \n_{{article['source']}} — {{article['date']}}_  \n🔗 [Lire l'article]({{article['link']}})"){article['source']} — {article['date']}_  
 🔗 [Lire l'article]({article['link']})")
             if cols[1].button("🗑️ Supprimer", key=f"delete_{i}"):
                 st.session_state.deleted_stack.append(article)
