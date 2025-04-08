@@ -6,6 +6,8 @@ import pandas as pd
 
 st.set_page_config(page_title="Revue de presse SIEP", page_icon="📰", layout="wide")
 
+zones_sources = {'🇧🇪 Belgique uniquement': ['.be'], '🇪🇺 Union Européenne': ['.be', '.fr', '.lu', '.nl', '.de', '.it', '.es', '.pt', '.pl', '.cz', '.se', '.fi', '.at', '.ie', '.gr'], '🌐 International': []}
+
 rubriques = {'Travail et Insertion Socio-Professionnelle': ['emploi', 'recherche d’emploi', 'législation du travail', 'contrat', 'job étudiant', 'insertion socio-professionnelle', 'CISP', 'année citoyenne', 'volontariat', 'rédaction de CV'], 'Enseignement de plein exercice : secondaire et supérieur': ['études', 'enseignement secondaire', 'enseignement supérieur', 'enseignement qualifiant', 'décret', 'structure scolaire', 'organisation des études', 'établissement scolaire', 'droit scolaire', 'exclusion scolaire', 'recours scolaire', 'accès aux études', 'coût des études', 'bourse d’étude', 'prêt d’étude', 'CPMS', 'école de devoirs', 'remédiation', 'méthode de travail', 'aide à la réussite', 'tutorat', 'DASPA', 'certification', 'choix d’études', 'année préparatoire', 'journée portes ouvertes', 'passerelle', 'valorisation des acquis (VAE)'], 'Formation': ['formation en alternance', 'CEFA', 'IFAPME', 'EFP', 'jury', 'enseignement à distance', 'horaire réduit', 'alphabétisation', 'promotion sociale', 'formation demandeur d’emploi', 'FOREM', 'ACTIRIS', 'centre de compétence', 'validation des compétences'], 'Protection sociale / aide aux personnes': ['chômage', 'mutuelle', 'aide sociale', 'revenu d’intégration sociale (RIS)', 'allocations familiales', 'financement des études', 'aide à la jeunesse'], 'Vie familiale et affective': ['sexualité', 'planning familial', 'égalité des genres', 'animation GDBD', 'charte égalité'], 'Qualité de vie': ['santé', 'consommation', 'harcèlement', 'sensibilisation', 'logement intergénérationnel', 'kot étudiant', 'contrat de bail', 'transport'], 'Loisirs / vacances': ['sport', 'stage vacances', 'formation animateur', 'centre d’hébergement', 'centre de rencontre'], 'International': ['projet international', 'séjour linguistique', 'stage à l’étranger', 'apprendre les langues', 'bourse internationale', 'test de langue', 'niveau CECRL', 'mobilité européenne'], 'Être acteur dans la société / Institutions et justice': ['citoyenneté', 'droits', 'devoirs', 'engagement', 'implication politique', 'démocratie', 'droit à l’image', 'réseaux sociaux', 'nationalité', 'institutions belges', 'institutions européennes', 'droits humains', 'partis politiques', 'participation des jeunes', 'mouvements philosophiques', 'police', 'justice', 'groupe de pression'], 'Les Métiers': ['orientation métier', 'projet de vie', 'connaissance de soi', 'information métier', 'exploration', 'rencontre professionnelle']}
 
 sources_fiables = [
@@ -57,7 +59,7 @@ def get_articles(rss_url, keyword, sources, accept_all=True):
         link = entry.link
         title = entry.title
         summary = entry.get("summary", "")
-        if accept_all or any(source in link for source in sources):
+        if accept_all and (not geo_extensions or any(link.endswith(ext) or f'.{ext}/' in link for ext in geo_extensions) or any(source in link for source in sources)):
             if keyword.lower() in title.lower() or keyword.lower() in summary.lower():
                 articles.append({
                     "title": title,
@@ -79,7 +81,11 @@ custom_sources = [url.strip().replace("https://", "").replace("http://", "").str
 
 custom_keyword = st.text_input("📝 (Optionnel) Rechercher un mot-clé personnalisé en plus de ceux de la rubrique :")
 
-# La case pour "sources non vérifiées" est supprimée => toujours True
+
+zone_geo = st.selectbox("🌍 Zone géographique ciblée", list(zones_sources.keys()))
+geo_extensions = zones_sources[zone_geo]
+accept_all = True  # toujours vrai mais filtrage ensuite
+
 accept_all = True
 
 if 'article_history' not in st.session_state:
