@@ -89,7 +89,7 @@ if 'article_history' not in st.session_state:
 if st.button("🔍 Rechercher"):
     total_articles = []
     mots_captés = set()
-    keywords_to_search = rubriques[rubrique].copy()
+    keywords_to_search = [custom_keyword] if custom_keyword else rubriques[rubrique].copy()
     if custom_keyword:
         keywords_to_search.append(custom_keyword)
 
