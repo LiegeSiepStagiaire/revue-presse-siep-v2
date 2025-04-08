@@ -1,5 +1,3 @@
-zones_sources_named = {'Belgique uniquement 🍟': ['rtbf.be', 'lesoir.be', 'lalibre.be', 'lecho.be', 'sudpresse.be', 'forem.be', 'actiris.be', 'siep.be', 'enseignement.be', 'enseignement.catholique.be', 'cfwb.be', 'socialsecurity.be', 'emploi.belgique.be', 'bx1.be', 'guide-social.be', 'dhnet.be', 'jobat.be', 'lanouvellegazette.be', 'references.lesoir.be', 'emploi.wallonie.be', 'enseignement.cfwb.be', 'monorientation.be', 'volontariat.be', 'jeminforme.be', 'citedesmetiers.be', 'onem.be', 'solidaris.be', 'rtlinfo.be', 'telesambre.be', 'televesdre.be', 'vivacite.be', 'notélé.be', 'canalzoom.be', 'namurinfo.be', 'journal-lavenir.be', 'lejournaldujeudi.be', 'proximus.be', 'metrolibre.be'], 'Union Européenne uniquement 🟦': ['rtbf.be', 'lesoir.be', 'lalibre.be', 'lecho.be', 'sudpresse.be', 'forem.be', 'actiris.be', 'siep.be', 'enseignement.be', 'enseignement.catholique.be', 'cfwb.be', 'socialsecurity.be', 'emploi.belgique.be', 'bx1.be', 'guide-social.be', 'dhnet.be', 'jobat.be', 'lanouvellegazette.be', 'references.lesoir.be', 'emploi.wallonie.be', 'enseignement.cfwb.be', 'monorientation.be', 'volontariat.be', 'jeminforme.be', 'citedesmetiers.be', 'onem.be', 'solidaris.be', 'rtlinfo.be', 'telesambre.be', 'televesdre.be', 'vivacite.be', 'notélé.be', 'canalzoom.be', 'namurinfo.be', 'journal-lavenir.be', 'lejournaldujeudi.be', 'proximus.be', 'metrolibre.be', 'lemonde.fr', 'francetvinfo.fr', 'france24.com', 'rtl.fr', 'lefigaro.fr', 'liberation.fr', 'laprovence.com', 'sudouest.fr', 'tageschau.de', 'zeit.de', 'elconfidencial.com', 'elpais.com', 'lavanguardia.com', 'ilsole24ore.com', 'repubblica.it', 'irishtimes.com', 'politico.eu', 'dw.com', 'deutsche-welle.com'], 'International': []}
-
 
 import streamlit as st
 import feedparser
@@ -59,7 +57,7 @@ def get_articles(rss_url, keyword, sources, accept_all=True):
         link = entry.link
         title = entry.title
         summary = entry.get("summary", "")
-        if accept_all and (not geo_sources or any(src in link for src in geo_sources) or any(src in link for src in sources)):
+        if accept_all or any(source in link for source in sources):
             if keyword.lower() in title.lower() or keyword.lower() in summary.lower():
                 articles.append({
                     "title": title,
@@ -82,9 +80,7 @@ custom_sources = [url.strip().replace("https://", "").replace("http://", "").str
 custom_keyword = st.text_input("📝 (Optionnel) Rechercher un mot-clé personnalisé en plus de ceux de la rubrique :")
 
 # La case pour "sources non vérifiées" est supprimée => toujours True
-zone_geo = st.selectbox("Zone géographique ciblée", list(zones_sources_named.keys()))
 accept_all = True
-geo_sources = zones_sources_named[zone_geo]
 
 if 'article_history' not in st.session_state:
     st.session_state.article_history = []
