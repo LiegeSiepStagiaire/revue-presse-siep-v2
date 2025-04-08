@@ -4,29 +4,8 @@ import feedparser
 from datetime import datetime, timedelta
 import pandas as pd
 
-# ---------- CONFIGURATION UI ----------
 st.set_page_config(page_title="Revue de presse SIEP", page_icon="📰", layout="wide")
-st.markdown("""
-    <style>
-    .main {
-        background-color: #f5f8fa;
-    }
-    .block-container {
-        padding: 2rem;
-    }
-    h1, h2 {
-        color: #002e5d;
-    }
-    .stButton button {
-        background-color: #0072ce;
-        color: white;
-        border-radius: 5px;
-        margin-right: 5px;
-    }
-    </style>
-""", unsafe_allow_html=True)
 
-# ---------- DONNÉES DE BASE ----------
 rubriques = {
     "Travail et Insertion Socio-Professionnelle": [
         "emploi", "recherche d’emploi", "législation du travail", "contrat",
@@ -102,7 +81,6 @@ def get_articles(rss_url, additional_sources):
             })
     return articles
 
-# ---------- UI ----------
 st.title("Revue de presse 📚 - SIEP Liège")
 
 rubrique = st.selectbox("Rubrique", list(rubriques.keys()))
@@ -140,7 +118,7 @@ if st.button("🔍 Rechercher"):
     st.session_state.article_history = filtered_articles
     st.session_state.deleted_stack = []
 
-if st.session_state.article_history:
+if st.session_state.article_history or st.session_state.article_history == []:
     search_filter = st.text_input("🔍 Filtrer les articles par mot-clé dans le titre :", "")
 
     for i, article in enumerate(st.session_state.article_history):
@@ -161,3 +139,6 @@ if st.session_state.article_history:
     df_export = pd.DataFrame(st.session_state.article_history)
     csv = df_export.to_csv(index=False).encode('utf-8')
     col3.download_button("⬇️ Exporter en CSV", data=csv, file_name="revue_presse_siep.csv", mime="text/csv")
+
+if not st.session_state.article_history:
+    st.warning("Aucun article pertinent trouvé pour cette rubrique et cette période.")
