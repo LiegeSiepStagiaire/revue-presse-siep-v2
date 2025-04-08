@@ -57,7 +57,15 @@ def get_articles(rss_url, keyword, sources, accept_all=True):
         link = entry.link
         title = entry.title
         summary = entry.get("summary", "")
-        if accept_all or any(source in link for source in sources):
+        if (
+    any(src in link for src in ['rtbf.be', 'lesoir.be', 'lalibre.be', 'lecho.be', 'sudpresse.be', 'forem.be', 'actiris.be', 'siep.be', 'enseignement.be', 'enseignement.catholique.be', 'cfwb.be', 'socialsecurity.be', 'emploi.belgique.be', 'bx1.be', 'guide-social.be', 'dhnet.be', 'jobat.be', 'lanouvellegazette.be', 'references.lesoir.be', 'emploi.wallonie.be', 'enseignement.cfwb.be', 'monorientation.be', 'volontariat.be', 'jeminforme.be', 'citedesmetiers.be', 'onem.be', 'solidaris.be', 'rtlinfo.be', 'telesambre.be', 'televesdre.be', 'vivacite.be', 'notélé.be', 'canalzoom.be', 'namurinfo.be', 'journal-lavenir.be', 'lejournaldujeudi.be', 'proximus.be', 'metrolibre.be']) or
+    (
+        any(src in link for src in ['euronews.com', 'politico.eu', 'dw.com', 'deutschlandfunk.de', 'euractiv.com', 'bruegel.org']) and (
+            any(kw.lower() in entry.title.lower() for kw in ['Belgique', 'Bruxelles', 'Wallonie', 'Flandre', 'francophone', 'belge', 'belges', 'communauté française']) or
+            any(kw.lower() in entry.get("summary", "").lower() for kw in ['Belgique', 'Bruxelles', 'Wallonie', 'Flandre', 'francophone', 'belge', 'belges', 'communauté française'])
+        )
+    )
+):
             if keyword.lower() in title.lower() or keyword.lower() in summary.lower():
                 articles.append({
                     "title": title,
@@ -80,7 +88,7 @@ custom_sources = [url.strip().replace("https://", "").replace("http://", "").str
 custom_keyword = st.text_input("📝 (Optionnel) Rechercher un mot-clé personnalisé en plus de ceux de la rubrique :")
 
 # La case pour "sources non vérifiées" est supprimée => toujours True
-accept_all = True
+accept_all = True  # Forcé, mais filtré selon pertinence belge
 
 if 'article_history' not in st.session_state:
     st.session_state.article_history = []
