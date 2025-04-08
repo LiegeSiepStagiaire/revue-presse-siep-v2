@@ -57,7 +57,7 @@ def get_articles(rss_url, keyword, sources, accept_all=True):
         link = entry.link
         title = entry.title
         summary = entry.get("summary", "")
-        if any(source in link for source in sources):
+        if accept_all or any(source in link for source in sources):
             if keyword.lower() in title.lower() or keyword.lower() in summary.lower():
                 articles.append({
                     "title": title,
@@ -74,13 +74,13 @@ col1, col2 = st.columns(2)
 start_date = col1.date_input("📅 Date de début", datetime.today() - timedelta(days=30))
 end_date = col2.date_input("📅 Date de fin", datetime.today())
 
-custom_sources_input = st.text_input("Ajouter des sites web supplémentaires (ex: https://mon-site.be), séparés par des virgules :")
+custom_sources_input = st.text_input("🔗 Ajouter des sites web supplémentaires (ex: https://mon-site.be), séparés par des virgules :")
 custom_sources = [url.strip().replace("https://", "").replace("http://", "").strip("/") for url in custom_sources_input.split(",") if url.strip()]
 
 custom_keyword = st.text_input("📝 (Optionnel) Rechercher un mot-clé personnalisé en plus de ceux de la rubrique :")
 
 # La case pour "sources non vérifiées" est supprimée => toujours True
-accept_all = True  # Version stable sans filtre géographique
+accept_all = True
 
 if 'article_history' not in st.session_state:
     st.session_state.article_history = []
@@ -121,7 +121,7 @@ if st.session_state.article_history or st.session_state.article_history == []:
     for i, article in enumerate(st.session_state.article_history):
         if search_filter.lower() in article['title'].lower():
             cols = st.columns([5, 1, 1])
-            cols[0].markdown(f"**{article['title']}**  \n_{article['date']}_  \n[Lire l'article]({article['link']})")
+            cols[0].markdown(f"**{article['title']}**  \n_{article['date']}_  \n🔗 [Lire l'article]({article['link']})")
             if cols[1].button("🗑️ Supprimer", key=f"delete_{i}"):
                 st.session_state.deleted_stack.append(article)
                 st.session_state.article_history.pop(i)
