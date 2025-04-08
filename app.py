@@ -50,7 +50,7 @@ def create_rss_url(keyword, start_date, end_date):
     params = "&hl=fr&gl=BE&ceid=BE:fr"
     return base_url + query + params
 
-def get_articles(rss_url, keyword, sources, accept_all=False):
+def get_articles(rss_url, keyword, sources, accept_all=True):
     feed = feedparser.parse(rss_url)
     articles = []
     for entry in feed.entries:
@@ -76,7 +76,11 @@ end_date = col2.date_input("📅 Date de fin", datetime.today())
 
 custom_sources_input = st.text_input("🔗 Ajouter des sites web supplémentaires (ex: https://mon-site.be), séparés par des virgules :")
 custom_sources = [url.strip().replace("https://", "").replace("http://", "").strip("/") for url in custom_sources_input.split(",") if url.strip()]
-accept_all = st.checkbox("👀 Voir aussi les sources non vérifiées")
+
+custom_keyword = st.text_input("📝 (Optionnel) Rechercher un mot-clé personnalisé en plus de ceux de la rubrique :")
+
+# La case pour "sources non vérifiées" est supprimée => toujours True
+accept_all = True
 
 if 'article_history' not in st.session_state:
     st.session_state.article_history = []
@@ -85,7 +89,11 @@ if 'article_history' not in st.session_state:
 if st.button("🔍 Rechercher"):
     total_articles = []
     mots_captés = set()
-    for keyword in rubriques[rubrique]:
+    keywords_to_search = rubriques[rubrique].copy()
+    if custom_keyword:
+        keywords_to_search.append(custom_keyword)
+
+    for keyword in keywords_to_search:
         url = create_rss_url(keyword, start_date.strftime('%Y-%m-%d'), end_date.strftime('%Y-%m-%d'))
         articles = get_articles(url, keyword, sources_fiables + custom_sources, accept_all)
         if articles:
