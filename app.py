@@ -59,7 +59,10 @@ sources_fiables = [
     "rtbf.be", "lesoir.be", "lalibre.be", "lecho.be", "sudpresse.be",
     "forem.be", "actiris.be", "siep.be", "enseignement.be",
     "enseignement.catholique.be", "cfwb.be", "socialsecurity.be",
-    "emploi.belgique.be"
+    "emploi.belgique.be", "bx1.be", "guide-social.be", "dhnet.be", "jobat.be",
+    "lanouvellegazette.be", "references.lesoir.be", "emploi.wallonie.be",
+    "enseignement.cfwb.be", "monorientation.be", "volontariat.be",
+    "jeminforme.be", "citedesmetiers.be", "onem.be", "solidaris.be"
 ]
 
 def create_rss_url(keyword, start_date, end_date):
@@ -68,12 +71,12 @@ def create_rss_url(keyword, start_date, end_date):
     params = "&hl=fr&gl=BE&ceid=BE:fr"
     return base_url + query + params
 
-def get_articles(rss_url, additional_sources):
+def get_articles(rss_url, sources, accept_all=False):
     feed = feedparser.parse(rss_url)
     articles = []
     for entry in feed.entries:
         link = entry.link
-        if any(source in link for source in sources_fiables + additional_sources):
+        if accept_all or any(source in link for source in sources):
             articles.append({
                 "title": entry.title,
                 "link": link,
@@ -85,26 +88,23 @@ st.title("Revue de presse 📚 - SIEP Liège")
 
 rubrique = st.selectbox("Rubrique", list(rubriques.keys()))
 
-custom_sources_input = st.text_input("Ajouter des sites web supplémentaires (ex: https://mon-site.be), séparés par des virgules :", "")
-custom_sources = [url.strip().replace("https://", "").replace("http://", "").strip("/") for url in custom_sources_input.split(",") if url.strip()]
+colA, colB = st.columns(2)
+start_date = colA.date_input("📅 Date de début", datetime.today() - timedelta(days=30))
+end_date = colB.date_input("📅 Date de fin", datetime.today())
 
-today = datetime.today()
-def_start = today - timedelta(days=30)
-start_date = st.date_input("Date de début", def_start)
-end_date = st.date_input("Date de fin", today)
+custom_sources_input = st.text_input("🔗 Ajouter des sites web supplémentaires (ex: https://mon-site.be), séparés par des virgules :")
+custom_sources = [url.strip().replace("https://", "").replace("http://", "").strip("/") for url in custom_sources_input.split(",") if url.strip()]
+accept_all = st.checkbox("👀 Voir aussi les sources non vérifiées")
 
 if 'article_history' not in st.session_state:
     st.session_state.article_history = []
     st.session_state.deleted_stack = []
 
 if st.button("🔍 Rechercher"):
-    start_str = start_date.strftime('%Y-%m-%d')
-    end_str = end_date.strftime('%Y-%m-%d')
-
     total_articles = []
     for keyword in rubriques[rubrique]:
-        url = create_rss_url(keyword, start_str, end_str)
-        articles = get_articles(url, custom_sources)
+        url = create_rss_url(keyword, start_date.strftime('%Y-%m-%d'), end_date.strftime('%Y-%m-%d'))
+        articles = get_articles(url, sources_fiables + custom_sources, accept_all)
         total_articles.extend(articles)
 
     seen = set()
