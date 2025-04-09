@@ -1,41 +1,28 @@
-
 import streamlit as st
 import feedparser
 from datetime import datetime, timedelta
 import pandas as pd
-from io import BytesIO
-from PIL import Image
-import base64
+import io
+from fpdf import FPDF
 
-# --- Configuration de la page ---
 st.set_page_config(page_title="Revue de presse SIEP", page_icon="📰", layout="wide")
 
-# --- Chargement du PDF (mode d'emploi) ---
-pdf_path = "mode_emploi_siep.pdf"
-try:
-    with open(pdf_path, "rb") as f:
-        st.markdown(
-            "<div style='text-align: right;'>"
-            + st.download_button(
-                label="📘 Mode d'emploi + rubriques",
-                data=f,
-                file_name="mode_emploi_siep.pdf",
-                mime="application/pdf"
-            ).html
-            + "</div>",
-            unsafe_allow_html=True
-        )
-except FileNotFoundError:
-    st.markdown("*Mode d'emploi SIEP (fichier PDF manquant)*")
-
-# --- Rubriques et mots-clés ---
+# ---------- RUBRIQUES ET MOTS-CLÉS ----------
 rubriques = {
     "Travail et Insertion Socio-Professionnelle": [
         "emploi", "recherche d’emploi", "législation du travail", "contrat",
         "job étudiant", "insertion socio-professionnelle", "CISP",
         "année citoyenne", "volontariat", "rédaction de CV"
+    ],
+    "Enseignement de plein exercice": [
+        "études", "enseignement secondaire", "enseignement supérieur", "enseignement qualifiant",
+        "décret", "structure scolaire", "organisation des études", "établissement scolaire",
+        "droit scolaire", "exclusion scolaire", "recours scolaire", "accès aux études",
+        "coût des études", "bourse d’étude", "prêt d’étude", "CPMS", "école de devoirs",
+        "remédiation", "méthode de travail", "aide à la réussite", "tutorat", "DASPA",
+        "certification", "choix d’études", "année préparatoire", "journée portes ouvertes",
+        "passerelle", "valorisation des acquis", "VAE"
     ]
-    # Ajouter d'autres rubriques ici...
 }
 
 sources_fiables = [
@@ -45,27 +32,31 @@ sources_fiables = [
     "emploi.belgique.be"
 ]
 
-# --- Interface principale ---
+# ---------- UI ----------
 st.title("Revue de presse 📚 - SIEP Liège")
+st.markdown(
+    "<div style='display: flex; justify-content: flex-end;'>"
+    "<a href='mode_emploi.pdf' download>"
+    "<button style='background-color:#f1f3f6;padding:0.5rem;border-radius:6px;border:1px solid #d1d1d1;'>"
+    "📘 Mode d'emploi + rubriques"
+    "</button></a></div>", unsafe_allow_html=True
+)
 
-col1, col2 = st.columns(2)
 rubrique = st.selectbox("Rubrique", list(rubriques.keys()))
-custom_sources_input = st.text_input("Ajouter des sites web supplémentaires à consulter (ex: https://mon-site.be), séparés par des virgules :", "")
+custom_sources_input = st.text_input("Ajouter des sites web supplémentaires à consulter (ex: https://mon-site.be), séparés par des virgules :")
 custom_sources = [url.strip().replace("https://", "").replace("http://", "").strip("/") for url in custom_sources_input.split(",") if url.strip()]
 
-with col1:
-    start_date = st.date_input("Date de début", datetime.today() - timedelta(days=30))
-with col2:
-    end_date = st.date_input("Date de fin", datetime.today())
+col1, col2 = st.columns(2)
+start_date = col1.date_input("Date de début", datetime.today() - timedelta(days=30))
+end_date = col2.date_input("Date de fin", datetime.today())
 
-mot_clef_perso = st.text_input("Rechercher un mot-clé personnalisé (optionnel) :")
+custom_keyword = st.text_input("Rechercher un mot-clé personnalisé (optionnel) :")
 
-# --- Fonctions principales ---
+# ---------- RECHERCHE ----------
 def create_rss_url(keyword, start_date, end_date):
     base_url = "https://news.google.com/rss/search?"
     query = f"q={keyword.replace(' ', '+')}+after:{start_date}+before:{end_date}"
-    params = "&hl=fr&gl=BE&ceid=BE:fr"
-    return base_url + query + params
+    return base_url + query + "&hl=fr&gl=BE&ceid=BE:fr"
 
 def get_articles(rss_url, sources):
     feed = feedparser.parse(rss_url)
@@ -77,49 +68,49 @@ def get_articles(rss_url, sources):
                 "title": entry.title,
                 "link": link,
                 "date": entry.published if 'published' in entry else "Date inconnue",
-                "source": link.split("/")[2]
+                "source": link.split('/')[2]
             })
     return articles
 
-# --- Lancement de la recherche ---
 if st.button("🔍 Rechercher"):
-    start_str = start_date.strftime('%Y-%m-%d')
-    end_str = end_date.strftime('%Y-%m-%d')
-
-    st.subheader(f"Résultats pour la rubrique '{rubrique}' entre {start_str} et {end_str}")
-
     keywords = rubriques[rubrique]
-    if mot_clef_perso:
-        keywords = [mot_clef_perso]
+    if custom_keyword:
+        keywords = [custom_keyword]
+    else:
+        keywords = rubriques[rubrique]
 
     all_articles = []
     matched_keywords = []
 
-    for keyword in keywords:
-        url = create_rss_url(keyword, start_str, end_str)
+    for kw in keywords:
+        url = create_rss_url(kw, start_date.strftime('%Y-%m-%d'), end_date.strftime('%Y-%m-%d'))
         articles = get_articles(url, sources_fiables + custom_sources)
         if articles:
-            matched_keywords.append(keyword)
-        all_articles.extend(articles)
+            matched_keywords.append(kw)
+            for a in articles:
+                a["keyword"] = kw
+            all_articles.extend(articles)
 
-    # Suppression des doublons
-    seen = set()
-    unique_articles = []
-    for article in all_articles:
-        key = (article['title'], article['link'])
-        if key not in seen:
-            seen.add(key)
-            unique_articles.append(article)
+    if all_articles:
+        st.success("Mots-clés ayant donné des résultats : " + ", ".join(matched_keywords))
+        search_filter = st.text_input("🔍 Filtrer les articles par mot-clé dans le titre :")
 
-    # --- Résumé et affichage ---
-    if unique_articles:
-        df = pd.DataFrame(unique_articles)
-        st.download_button("📥 Exporter les articles (CSV)", df.to_csv(index=False).encode("utf-8"), "revue_presse_siep.csv", mime="text/csv")
+        for article in all_articles:
+            if search_filter.lower() in article['title'].lower():
+                cols = st.columns([6, 1])
+                cols[0].markdown(
+                    f"**{article['title']}**  
+"
+                    f"_{article['source']} - {article['date']}_  
+"
+                    f"[Lire l'article]({article['link']})"
+                )
+                if cols[1].button("🗑️ Supprimer", key=article['link']):
+                    all_articles.remove(article)
 
-        for article in unique_articles:
-            st.markdown(f"**{article['title']}**  
-_{article['source']} - {article['date']}  
-[Lire l'article]({article['link']})")
-            st.markdown("---")
+        # Export CSV
+        df = pd.DataFrame(all_articles)
+        csv = df.to_csv(index=False).encode("utf-8")
+        st.download_button("📥 Exporter les résultats (CSV)", data=csv, file_name="revue_presse_siep.csv", mime="text/csv", key="download_csv")
     else:
         st.info("Aucun article pertinent trouvé pour cette rubrique et cette période.")
