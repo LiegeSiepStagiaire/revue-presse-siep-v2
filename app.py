@@ -1,8 +1,8 @@
 
-    import streamlit as st
-    import feedparser
-    from datetime import datetime, timedelta
-    import pandas as pd
+import streamlit as st
+import feedparser
+from datetime import datetime, timedelta
+import pandas as pd
 
     st.set_page_config(page_title="Revue de presse SIEP", page_icon="📰", layout="wide")
 
