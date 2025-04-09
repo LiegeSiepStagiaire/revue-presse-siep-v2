@@ -143,9 +143,5 @@ if st.session_state.article_history or st.session_state.article_history == []:
         st.session_state.article_history.append(last_deleted)
         st.rerun()
 
-    df_export = pd.DataFrame(st.session_state.article_history)
-    csv = df_export.to_csv(index=False).encode('utf-8')
-    colC.download_button("⬇️ Exporter en CSV", data=csv, file_name="revue_presse_siep.csv", mime="text/csv")
-
 if not st.session_state.article_history:
     st.warning("Aucun article pertinent trouvé pour cette rubrique et cette période.")
