@@ -146,7 +146,11 @@ if st.button("🔍 Rechercher"):
         search_filter = st.text_input("🔎 Filtrer les articles par mot-clé dans le titre :", "")
         for article in total_articles:
             if search_filter.lower() in article["title"].lower():
-                st.markdown(f"**{article['title']}**  
+                st.markdown(
+                    f"**{article['title']}**  \n"
+                    f"_{article['source']} - {article['date']}_  \n"
+                    f"[Lire l'article]({article['link']})"
+                )
 _{article['source']} - {article['date']}_  
 [Lire l'article]({article['link']})")
                 st.markdown("---")
