@@ -72,7 +72,6 @@ st.title("Revue de presse 📚 - SIEP Liège")
 col1, col2 = st.columns([4, 1])
 with col2:
     with open("Mode_emploi_SIEP_complet.pdf", "rb") as pdf_file:
-        st.download_button(
             label="📘 Mode d'emploi + rubriques",
             data=pdf_file,
             file_name="Mode_emploi_SIEP_complet.pdf",
@@ -145,14 +144,12 @@ if st.session_state.article_history or st.session_state.article_history == []:
 
     df_export = pd.DataFrame(st.session_state.article_history)
     csv = df_export.to_csv(index=False).encode('utf-8')
-    colC.download_button("⬇️ Exporter en CSV", data=csv, file_name="revue_presse_siep.csv", mime="text/csv")
 
 if not st.session_state.article_history:
     st.warning("Aucun article pertinent trouvé pour cette rubrique et cette période.")
 
 
 with open("Mode_emploi_SIEP_complet.pdf", "rb") as pdf_file:
-    st.download_button(
         label="📘 Mode d'emploi + rubriques",
         data=pdf_file,
         file_name="Mode_emploi_SIEP_complet.pdf",
