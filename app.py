@@ -148,10 +148,7 @@ if st.button("🔍 Rechercher"):
             if search_filter.lower() in article["title"].lower():
                 st.markdown(
                     f"**{article['title']}**  \n"
-                    f"_{article['source']} - {article['date']}_  \n"
-                    f"[Lire l'article]({article['link']})"
                 )
-_{article['source']} - {article['date']}_  
                 st.markdown("---")
     else:
         st.info("Aucun article pertinent trouvé pour cette rubrique et cette période.")
