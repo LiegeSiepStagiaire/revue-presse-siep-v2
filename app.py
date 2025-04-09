@@ -1,45 +1,20 @@
+
 import streamlit as st
 import feedparser
 from datetime import datetime, timedelta
 import pandas as pd
+import base64
 
-# CONFIGURATION UI
+# Configuration
 st.set_page_config(page_title="Revue de presse SIEP", page_icon="📰", layout="wide")
 
-st.markdown(
-    """
-    <style>
-    .main {
-        background-color: #f5f8fa;
-    }
-    .block-container {
-        padding: 2rem;
-    }
-    h1, h2 {
-        color: #002e5d;
-    }
-    .stButton button {
-        background-color: #0072ce;
-        color: white;
-        border-radius: 5px;
-    }
-    </style>
-    """, unsafe_allow_html=True)
-
-# PDF mode d'emploi
-with st.sidebar:
-    st.markdown("### Mode d'emploi")
-    try:
-        with open("Mode_emploi_SIEP_complet.pdf", "rb") as f:
-            st.download_button(
-                label="📘 Mode d'emploi + rubriques",
-                data=f,
-                file_name="Mode_emploi_SIEP_complet.pdf",
-                mime="application/pdf",
-                key="mode_emploi_button"
-            )
-    except FileNotFoundError:
-        st.markdown("_PDF manquant_")
+# Logo et titre
+col1, col2 = st.columns([9, 1])
+with col1:
+    st.title("Revue de presse 📚 - SIEP Liège")
+with col2:
+    with open("/mnt/data/Mode_emploi_SIEP_complet.pdf", "rb") as f:
+        st.download_button("📘 Mode d'emploi + rubriques", f, file_name="Mode_emploi_SIEP_complet.pdf")
 
 # Données
 rubriques = {
@@ -55,9 +30,8 @@ rubriques = {
         "coût des études", "bourse d’étude", "prêt d’étude", "CPMS", "école de devoirs",
         "remédiation", "méthode de travail", "aide à la réussite", "tutorat", "DASPA",
         "certification", "choix d’études", "année préparatoire", "journée portes ouvertes",
-        "passerelle", "valorisation des acquis", "VAE"
-    ],
-    # Ajouter ici les autres rubriques
+        "passerelle", "valorisation des acquis (VAE)"
+    ]
 }
 
 sources_fiables = [
@@ -67,6 +41,7 @@ sources_fiables = [
     "emploi.belgique.be"
 ]
 
+# Fonctions
 def create_rss_url(keyword, start_date, end_date):
     base_url = "https://news.google.com/rss/search?"
     query = f"q={keyword.replace(' ', '+')}+after:{start_date}+before:{end_date}"
@@ -82,13 +57,12 @@ def get_articles(rss_url, additional_sources):
             articles.append({
                 "title": entry.title,
                 "link": link,
-                "source": link.split('/')[2],
                 "date": entry.published if 'published' in entry else "",
+                "source": link.split('/')[2]
             })
     return articles
 
-st.title("Revue de presse 📚 - SIEP Liège")
-
+# UI
 rubrique = st.selectbox("Rubrique", list(rubriques.keys()))
 col1, col2 = st.columns(2)
 with col1:
@@ -98,20 +72,19 @@ with col2:
 
 custom_sources_input = st.text_input("Ajouter des sites web supplémentaires à consulter (ex: https://mon-site.be), séparés par des virgules :", "")
 custom_sources = [url.strip().replace("https://", "").replace("http://", "").strip("/") for url in custom_sources_input.split(",") if url.strip()]
+custom_keyword = st.text_input("Rechercher un mot-clé personnalisé (optionnel) :")
 
-search_button = st.button("🔍 Rechercher")
-
-if search_button:
+if st.button("🔍 Rechercher"):
     start_str = start_date.strftime('%Y-%m-%d')
     end_str = end_date.strftime('%Y-%m-%d')
-
     st.subheader(f"Résultats pour la rubrique '{rubrique}' entre {start_str} et {end_str}")
+
     total_articles = []
-    keywords = rubriques[rubrique]
+    keywords = [custom_keyword] if custom_keyword else rubriques[rubrique]
+
     for keyword in keywords:
         url = create_rss_url(keyword, start_str, end_str)
-        articles = get_articles(url, custom_sources)
-        total_articles.extend(articles)
+        total_articles.extend(get_articles(url, custom_sources))
 
     seen = set()
     filtered_articles = []
@@ -123,9 +96,13 @@ if search_button:
 
     if filtered_articles:
         for article in filtered_articles:
-            st.markdown(f"**{article['title']}**  
-_{article['source']} - {article['date']}_  
-[Lire l'article]({article['link']})")
+            st.markdown(
+                f"**{article['title']}**  
+"
+                f"_{article['source']} – {article['date']}_  
+"
+                f"[Lire l'article]({article['link']})"
+            )
             st.markdown("---")
     else:
         st.info("Aucun article pertinent trouvé pour cette rubrique et cette période.")
