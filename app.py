@@ -72,7 +72,10 @@ st.title("Revue de presse 📚 - SIEP Liège")
 col1, col2 = st.columns([4, 1])
 with col2:
     with open("Mode_emploi_SIEP_complet.pdf", "rb") as pdf_file:
-        st.download_button(
+            label="📘 Mode d'emploi + rubriques",
+            data=pdf_file,
+            file_name="Mode_emploi_SIEP_complet.pdf",
+            mime="application/pdf"
         )
 
 rubrique = st.selectbox("Rubrique", list(rubriques.keys()))
@@ -146,6 +149,9 @@ if not st.session_state.article_history:
     st.warning("Aucun article pertinent trouvé pour cette rubrique et cette période.")
 
 
-    with open("Mode_emploi_SIEP_complet.pdf", "rb") as pdf_file:
-        st.download_button(
+with open("Mode_emploi_SIEP_complet.pdf", "rb") as pdf_file:
+        label="📘 Mode d'emploi + rubriques",
+        data=pdf_file,
+        file_name="Mode_emploi_SIEP_complet.pdf",
+        mime="application/pdf"
     )
