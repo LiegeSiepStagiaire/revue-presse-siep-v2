@@ -139,3 +139,12 @@ if st.session_state.article_history or st.session_state.article_history == []:
 
 if not st.session_state.article_history:
     st.warning("Aucun article pertinent trouvé pour cette rubrique et cette période.")
+
+
+with open("Mode_emploi_SIEP_complet.pdf", "rb") as pdf_file:
+    st.download_button(
+        label="📘 Mode d'emploi + rubriques",
+        data=pdf_file,
+        file_name="Mode_emploi_SIEP_complet.pdf",
+        mime="application/pdf"
+    )
