@@ -94,7 +94,7 @@ if st.button("🔍 Rechercher"):
     total_articles = []
     mots_captés = set()
 
-        if articles:
+    if articles:
         total_articles.extend(articles)
 
     seen = set()
