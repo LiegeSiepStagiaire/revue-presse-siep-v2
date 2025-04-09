@@ -152,7 +152,6 @@ if st.button("🔍 Rechercher"):
                     f"[Lire l'article]({article['link']})"
                 )
 _{article['source']} - {article['date']}_  
-[Lire l'article]({article['link']})")
                 st.markdown("---")
     else:
         st.info("Aucun article pertinent trouvé pour cette rubrique et cette période.")
