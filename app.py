@@ -81,6 +81,7 @@ with col2:
 
 rubrique = st.selectbox("Rubrique", list(rubriques.keys()))
 col1, col2 = st.columns(2)
+st.markdown("> ℹ️ Pour faciliter l’analyse, il est conseillé de faire la recherche par semaine plutôt que sur de longues périodes. Cela reste bien sûr facultatif.")
 start_date = col1.date_input("📅 Date de début", datetime.today() - timedelta(days=30))
 end_date = col2.date_input("📅 Date de fin", datetime.today())
 
