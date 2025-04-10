@@ -3,6 +3,7 @@ import streamlit as st
 import feedparser
 from datetime import datetime, timedelta
 import pandas as pd
+import re
 
 st.set_page_config(page_title="Revue de presse SIEP", page_icon="📰", layout="wide")
 
@@ -50,6 +51,11 @@ def create_rss_url(keyword, start_date, end_date):
     params = "&hl=fr&gl=BE&ceid=BE:fr"
     return base_url + query + params
 
+def summarize(text):
+    text = re.sub('<[^<]+?>', '', text)
+    sentences = re.split(r'(?<=[.!?]) +', text)
+    return sentences[0] if sentences else "Pas de résumé disponible."
+
 def get_articles(rss_url, keyword, sources, accept_all=True):
     feed = feedparser.parse(rss_url)
     articles = []
@@ -63,7 +69,8 @@ def get_articles(rss_url, keyword, sources, accept_all=True):
                     "title": title,
                     "link": link,
                     "date": format_date_francaise(entry.published if 'published' in entry else ""),
-                    "keyword": keyword
+                    "keyword": keyword,
+                    "summary": summarize(summary)
                 })
     return articles
 
@@ -89,7 +96,6 @@ custom_sources = [url.strip().replace("https://", "").replace("http://", "").str
 
 custom_keyword = st.text_input("📝 (Optionnel) Rechercher un mot-clé personnalisé en plus de ceux de la rubrique :")
 
-# La case pour "sources non vérifiées" est supprimée => toujours True
 accept_all = True
 
 if 'article_history' not in st.session_state:
@@ -131,7 +137,12 @@ if st.session_state.article_history or st.session_state.article_history == []:
     for i, article in enumerate(st.session_state.article_history):
         if search_filter.lower() in article['title'].lower():
             cols = st.columns([5, 1, 1])
-            cols[0].markdown(f"**{article['title']}**  \n_{article['date']}_  \n🔗 [Lire l'article]({article['link']})")
+            with cols[0]:
+                st.markdown(f"**{article['title']}**  
+_{article['date']}_  
+🔗 [Lire l'article]({article['link']})")
+                if st.button("📄 Résumé", key=f"summary_{i}"):
+                    st.info(f"Résumé : {article['summary']}")
             if cols[1].button("🗑️ Supprimer", key=f"delete_{i}"):
                 st.session_state.deleted_stack.append(article)
                 st.session_state.article_history.pop(i)
